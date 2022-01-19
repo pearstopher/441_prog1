@@ -9,19 +9,8 @@ from treelib import Node, Tree
 
 class Board:
 
-    # the total number of squares in the world
-    #   tiles = SIZE - 1
-    #   sqrt(SIZE) = width = height
-    SIZE = 0    # the total number of squares in the world
-
-    # the location of the blank square
-    # blank = 0
-
-    # the array of tiles
-    tiles = []
-
     def __init__(self, size):
-        self.SIZE = size
+        self.SIZE = size  # size = total number of spaces on the board
         self.WIDTH = int(math.sqrt(size))
 
         # generate n squares at random locations
@@ -99,8 +88,23 @@ class Board:
                 cost += 1
         return cost
 
-    # heuristic 2 - total Manhattan distance (i.e. 1-norm)
+    # heuristic 2 - total Euclidian distance (L2 norm)
+    # dominates h1
     def h2(self):
+        cost = 0
+        # loop through tiles, calculate distance from correct square
+        for i in range(0, self.SIZE):
+            if self.tiles[i] != 0:
+                # how many rows off left/right
+                dist_lr = (self.tiles[i] % self.WIDTH) - (i % self.WIDTH)
+                # how many columns off up/down
+                dist_ud = math.floor(self.tiles[i] / self.WIDTH) - math.floor(i / self.WIDTH)
+                cost += math.sqrt(dist_lr*dist_lr + dist_ud*dist_ud)
+        return cost
+
+    # heuristic 3 - total Manhattan distance (i.e. 1-norm)
+    # dominates h2
+    def h3(self):
         cost = 0
         # loop through tiles, calculate distance from correct square
         for i in range(0, self.SIZE):
@@ -115,7 +119,7 @@ class Board:
     def info(self):
         print("Size: ", self.SIZE, " Width: ", self.WIDTH, " Empty tile: ", self.empty())
         print(self.tiles.reshape((self.WIDTH, self.WIDTH)))
-        print("H1 cost: ", self.h1(), " H2 cost: ", self.h2())
+        print("H1 cost: ", self.h1(), " H2 cost: ", self.h2(), " H3 cost: ", self.h3())
 
 
 if __name__ == '__main__':
@@ -147,4 +151,3 @@ if __name__ == '__main__':
     world.down()
 
     world.info()
-
