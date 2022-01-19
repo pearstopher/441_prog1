@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from treelib import Node, Tree
+import copy
 
 # todo:
 # fix up Board nodes in tree
@@ -10,12 +11,12 @@ from treelib import Node, Tree
 class Board:
 
     def __init__(self, size, conf="rand"):
-        self.SIZE = size  # size = total number of spaces on the board
-        self.WIDTH = int(math.sqrt(size))
+        self.SIZE = size + 1  # size = total number of spaces on the board
+        self.WIDTH = int(math.sqrt(self.SIZE))
 
         if conf == "rand":
             # generate n squares at random locations
-            self.tiles = np.random.choice(size, size, replace=False)
+            self.tiles = np.random.choice(self.SIZE, self.SIZE, replace=False)
         else:
             # I am using 0 to represent the empty square
             conf = conf.replace("b", "0")
@@ -119,10 +120,27 @@ class Board:
 
     # DISPLAY
 
+    # return unique identifier for this board configuration
+    def id(self):
+        # return int(np.core.defchararray.join('', self.tiles.tolist()))
+        # generate an array with strings
+        ID = ""
+        for i in self.tiles:
+            ID += str(i)
+
+        return int(ID)
+
+
+
+
+
+    # print some basic info about the board
     def info(self):
+        print("Board ID: ", self.id())
         print("Size: ", self.SIZE, " Width: ", self.WIDTH, " Empty tile: ", self.empty())
         print(self.tiles.reshape((self.WIDTH, self.WIDTH)))
         print("H1 cost: ", self.h1(), " H2 cost: ", self.h2(), " H3 cost: ", self.h3())
+        print()
 
 
 def test_run():
@@ -130,13 +148,29 @@ def test_run():
     tree = Tree()
 
     # create the root node
-    size = int(input("Please enter the puzzle size (8, 15, 24...): "))
-    conf = input("Please enter the configuration of the puzzle,\n"
-                 "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
-                 " You may type 'rand' to have the order generated for you: ")
-    tree.create_node("root", "root", data=Board(size+1, conf))
+    # size = int(input("Please enter the puzzle size (8, 15, 24...): "))
+    # conf = input("Please enter the configuration of the puzzle,\n"
+    #              "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
+    #              " You may type 'rand' to have the order generated for you: ")
+    # type = input("Please select 'a' for A* search or 'b' for best-first search: ")
+    size = 8
+    conf = 'rand'
+    search = 'a'
 
-    world = tree.get_node("root").data
+    root = Board(size, conf)
+    tree.create_node(root.id(), root.id(), data=root)
+
+    world = tree.get_node(root.id()).data
+
+    # create nodes for all of the possibilities
+    left = copy.copy(world)
+    tree.create_node("left", "left", parent=world.id(), data=left)
+
+    if search == 'a':
+        print("A* search not implemented.")
+
+    else:
+        print("Best-first search not implemented.")
 
     world.info()
 
