@@ -9,12 +9,20 @@ from treelib import Node, Tree
 
 class Board:
 
-    def __init__(self, size):
+    def __init__(self, size, conf="rand"):
         self.SIZE = size  # size = total number of spaces on the board
         self.WIDTH = int(math.sqrt(size))
 
-        # generate n squares at random locations
-        self.tiles = np.random.choice(size, size, replace=False)
+        if conf == "rand":
+            # generate n squares at random locations
+            self.tiles = np.random.choice(size, size, replace=False)
+            print(self.tiles)
+        else:
+            # split the string and build the array
+            conf = conf.replace("b", "0")
+            self.tiles = np.array(list(map(int, conf.split())))
+            # self.tiles = np.array([int(n) for n in conf.split()])
+            print(self.tiles)
 
         # the square set to zero will be the blank square
         # self.blank = np.where(self.tiles == 0)
@@ -122,32 +130,46 @@ class Board:
         print("H1 cost: ", self.h1(), " H2 cost: ", self.h2(), " H3 cost: ", self.h3())
 
 
+def test_run():
+    # initialize the tree
+    tree = Tree()
+
+    # create the root node
+    size = int(input("Please enter the puzzle size (8, 15, 24...): "))
+    conf = input("Please enter the configuration of the puzzle,\n"
+                 "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
+                 " You may type 'rand' to have the order generated for you: ")
+    tree.create_node("root", "root", data=Board(size+1, conf))
+
+    world = tree.get_node("root").data
+
+    world.info()
+
+    world.up()
+    world.up()
+    world.up()
+
+    world.info()
+
+    world.left()
+    world.left()
+    world.left()
+
+    world.info()
+
+    world.right()
+    world.right()
+    world.right()
+
+    world.info()
+
+    world.down()
+    world.down()
+    world.down()
+
+    world.info()
+
+
 if __name__ == '__main__':
 
-    world = Board(3*3)
-
-    world.info()
-
-    world.up()
-    world.up()
-    world.up()
-
-    world.info()
-
-    world.left()
-    world.left()
-    world.left()
-
-    world.info()
-
-    world.right()
-    world.right()
-    world.right()
-
-    world.info()
-
-    world.down()
-    world.down()
-    world.down()
-
-    world.info()
+    test_run()
