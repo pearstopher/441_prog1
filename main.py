@@ -16,16 +16,13 @@ class Board:
         if conf == "rand":
             # generate n squares at random locations
             self.tiles = np.random.choice(size, size, replace=False)
-            print(self.tiles)
         else:
-            # split the string and build the array
+            # I am using 0 to represent the empty square
             conf = conf.replace("b", "0")
+            # split the string and build the array
             self.tiles = np.array(list(map(int, conf.split())))
-            # self.tiles = np.array([int(n) for n in conf.split()])
-            print(self.tiles)
 
-        # the square set to zero will be the blank square
-        # self.blank = np.where(self.tiles == 0)
+    # HELPERS
 
     # get location of the empty square
     def empty(self):
@@ -43,49 +40,45 @@ class Board:
         self.tiles[b] = temp
         return True
 
+    # MOVES
+
     # move the blank up
     def up(self):
         e = self.empty()
-
         # make sure there is a row above
         if e < self.WIDTH:
             return False
-
         self.swap(e, e - self.WIDTH)
         return True
 
     # move the blank down
     def down(self):
         e = self.empty()
-
         # make sure there is a row below
         if e > self.SIZE - 1 - self.WIDTH:
             return False
-
         self.swap(e, e + self.WIDTH)
         return True
 
     # move the blank left
     def left(self):
         e = self.empty()
-
         # make sure there is a column to the left
         if e % self.WIDTH == 0:
             return False
-
         self.swap(e, e - 1)
         return True
 
     # move the blank right
     def right(self):
         e = self.empty()
-
         # make sure there is a column to the right
         if (e + 1) % self.WIDTH == 0:
             return False
-
         self.swap(e, e + 1)
         return True
+
+    # HEURISTICS
 
     # heuristic 1 - number of misplaced tiles
     def h1(self):
@@ -123,6 +116,8 @@ class Board:
                 dist_ud = abs(math.floor(self.tiles[i] / self.WIDTH) - math.floor(i / self.WIDTH))
                 cost += dist_lr + dist_ud
         return cost
+
+    # DISPLAY
 
     def info(self):
         print("Size: ", self.SIZE, " Width: ", self.WIDTH, " Empty tile: ", self.empty())
