@@ -160,7 +160,7 @@ def test_run():
 
     # hardcode some init for now
     size = 8
-    conf = "1 b 2 3 4 5 6 7 8"
+    conf = "b 2 3 1 4 5 6 7 8"
     search = 'a'
 
     # create the root node based on the specifications
@@ -188,8 +188,8 @@ def test_run():
     def expand(node):
         # generate costs for the current node and add to tree and priority queue
         if node.goal():
-            print("GOAL FOUND")
-            return
+            print("GOAL FOUND goal found")
+        #    nfd = True
 
         for i in range(4):
             c = copy.deepcopy(node)
@@ -221,19 +221,20 @@ def test_run():
                 # hq.heappush(pq, [c.h3() + d - 1, c.id()])
                 hq.heappush(pq, pqNode(c.h3() + d, c.id()))
 
+            # return nfd # no goal found
+
     def expand_cheapest():
         cheapest = hq.heappop(pq)
         # cheapest = pq[0]
         node = tree.get_node(cheapest.id).data
         expand(node)
-        #print(pq)
-        return cheapest.cost
+        # print(pq)
 
-    for i in range(3):
-        cost = expand_cheapest()
-        print("i: ", i, " cost: ", cost)
+    for j in range(100000):
+        expand_cheapest()
+        # print("i: ", i, " cost: ", cost)
 
-    tree.show()
+    # tree.show()
 
 
     # create nodes for all of the possibilities
