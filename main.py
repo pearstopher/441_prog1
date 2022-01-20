@@ -13,6 +13,7 @@ class Board:
     def __init__(self, size, conf="rand"):
         self.SIZE = size + 1  # size = total number of spaces on the board
         self.WIDTH = int(math.sqrt(self.SIZE))
+        self.parent = None
 
         if conf == "rand":
             # generate n squares at random locations
@@ -131,6 +132,14 @@ class Board:
             id_str += str(i)
         return int(id_str)
 
+    def solvable(self):
+        # test if board is solvable
+        total = 0
+        for i in range(self.SIZE - 1):
+            if self.tiles[i] > self.tiles[i+1]:
+                total += 1
+        return total % 2 == 0
+
     def goal(self):
         # check if this board has reached the goal
         if np.array_equal(self.tiles, self.goal_tiles):
@@ -143,6 +152,7 @@ class Board:
         print("Size: ", self.SIZE, " Width: ", self.WIDTH, " Empty tile: ", self.empty())
         print(self.tiles.reshape((self.WIDTH, self.WIDTH)))
         print("H1 cost: ", self.h1(), " H2 cost: ", self.h2(), " H3 cost: ", self.h3())
+        print("Solvable: ", self.solvable())
         print()
 
 
@@ -157,7 +167,7 @@ class TestRun:
         self.type = 'a'
 
         # set up a flag for if answer is found
-        self.found = False
+        self.found = None
         # initialize priority queue
         self.pq = []
 
@@ -191,11 +201,11 @@ class TestRun:
     def expand(self, node):
         # generate costs for the current node and add to tree and priority queue
         if node.goal():
-            print("GOAL FOUND goal found")
-            self.found = True
+            self.found = node
 
         for i in range(4):
             c = copy.deepcopy(node)
+            c.parent = node
             # wtb switch statement
             if i == 0:
                 c.left()
@@ -236,11 +246,26 @@ class TestRun:
             self.expand_cheapest()
             # print("i: ", i, " cost: ", cost)
             if self.found:
-                print("Iterations: ", i)
+                print("Nodes expanded: ", i)
+                path = []
+                path = self.show_path(self.found, path)
+                print("Steps to solution: ", len(path))
+                print()
+                for j in path:
+                    print(j.reshape(self.found.WIDTH, self.found.WIDTH))
+                    print()
                 break
 
-    def show(self):
+    def show_tree(self):
         self.tree.show()
+
+    def show_path(self, node, result):
+        # result = str(node.id()).zfill(node.SIZE) + "\n" + result
+        result.insert(0, node.tiles)
+        if node.parent:
+            return self.show_path(node.parent, result)
+        else:
+            return result
 
 
 if __name__ == '__main__':
