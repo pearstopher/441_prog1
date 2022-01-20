@@ -4,8 +4,10 @@
 import numpy as np
 import math
 import copy
-from treelib import Tree, exceptions as x  # search tree
+from treelib import Tree, exceptions as x  # pip install treelib
 import heapq as hq  # priority queue
+
+# todo: implement 'test suite' to run all heuristics for each search method
 
 
 class Board:
@@ -133,11 +135,12 @@ class Board:
         return int(id_str)
 
     def solvable(self):
-        # test if board is solvable
+        # test if board is solvable by looking for out-of-order elements
         total = 0
-        for i in range(self.SIZE - 1):
-            if self.tiles[i] > self.tiles[i+1]:
-                total += 1
+        for i in range(0, self.SIZE - 1):
+            for j in range(i + 1, self.SIZE):
+                if self.tiles[i] != 0 and self.tiles[j] != 0 and self.tiles[i] > self.tiles[j]:
+                    total += 1
         return total % 2 == 0
 
     def goal(self):
@@ -165,6 +168,7 @@ class TestRun:
         self.size = 8
         self.conf = "rand"
         self.type = 'a'
+        self.heuristic = 1
 
         # set up a flag for if answer is found
         self.found = None
@@ -189,9 +193,11 @@ class TestRun:
                               "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
                               " You may type 'rand' to have the order generated for you: ")
             self.type = input("Please select 'a' for A* search or 'b' for best-first search: ")
+            self.heuristic = input("Please select a heuristic (1, 2, 3): ")
 
         # create the root node based on the specifications
         root = Board(self.size, self.conf)
+        root.info()
         self.tree.create_node(root.id(), root.id(), data=root)
 
         # push initial node onto the priority queue
@@ -229,10 +235,19 @@ class TestRun:
 
             # otherwise add to heap
             if not fail:
-                n = self.tree.get_node(c.id())
-                d = self.tree.depth(n)
-                # hq.heappush(pq, [c.h3() + d - 1, c.id()])
-                hq.heappush(self.pq, self.PQNode(c.h3() + d, c.id()))
+                # get the cost from specified heuristic
+                if self.heuristic == 1:
+                    cost = c.h1()
+                elif self.heuristic == 2:
+                    cost = c.h2()
+                else:
+                    cost = c.h3()
+                # add depth to cost if the search is A*
+                if self.type == 'a':
+                    n = self.tree.get_node(c.id())
+                    d = self.tree.depth(n)
+                    cost += d
+                hq.heappush(self.pq, self.PQNode(cost, c.id()))
 
     def expand_cheapest(self):
         cheapest = hq.heappop(self.pq)
@@ -252,8 +267,9 @@ class TestRun:
                 print("Steps to solution: ", len(path))
                 print()
                 for j in path:
-                    print(j.reshape(self.found.WIDTH, self.found.WIDTH))
-                    print()
+                    # print(j.reshape(self.found.WIDTH, self.found.WIDTH))
+                    print(j)
+                print()
                 break
 
     def show_tree(self):
@@ -271,5 +287,5 @@ class TestRun:
 if __name__ == '__main__':
 
     run = TestRun()
-    run.configure()
-    run.run()
+    run.configure(False)
+    run.run(100000)
