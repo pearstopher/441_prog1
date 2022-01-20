@@ -26,7 +26,7 @@ class Board:
 
         self.goal_tiles = np.array(list(range(0, self.SIZE)))
         # print(self.goal)
-        # rint(self.tiles)
+        # print(self.tiles)
 
     # HELPERS
 
@@ -127,10 +127,10 @@ class Board:
     # return unique identifier for this board configuration
     def id(self):
         # convert board configuration into a unique integer
-        ID = ""
+        id_str = ""
         for i in self.tiles:
-            ID += str(i)
-        return int(ID)
+            id_str += str(i)
+        return int(id_str)
 
     def goal(self):
         # check if this board has reached the goal
@@ -147,49 +147,53 @@ class Board:
         print()
 
 
-def test_run():
-    # initialize the tree
-    tree = Tree()
+class TestRun:
 
-    # create the root node
-    # size = int(input("Please enter the puzzle size (8, 15, 24...): "))
-    # conf = input("Please enter the configuration of the puzzle,\n"
-    #              "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
-    #              " You may type 'rand' to have the order generated for you: ")
-    # type = input("Please select 'a' for A* search or 'b' for best-first search: ")
+    def __init__(self):
+        # initialize the tree
+        self.tree = Tree()
+        # default info to start
+        self.size = 8
+        self.conf = "rand"
+        self.type = 'a'
 
-    # hardcode some init for now
-    size = 8
-    conf = "b 2 3 1 4 5 6 7 8"
-    search = 'a'
+        # set up a flag for if answer is found
+        self.found = False
+        # initialize priority queue
+        self.pq = []
 
-    # create the root node based on the specifications
-    root = Board(size, conf)
-    tree.create_node(root.id(), root.id(), data=root)
-
-    # initialize priority queue
-    pq = []
-
-    # make a little node to hold our data in the heap
-    class pqNode:
-        def __init__(self, cost, id):
+    # make a little node to hold our data in the priority q
+    class PQNode:
+        def __init__(self, cost, node_id):
             self.cost = cost
-            self.id = id
+            self.id = node_id
 
         def __lt__(self, other):
             return self.cost < other.cost
 
-    # push initial node onto the priority queue
-    # hq.heappush(pq, [root.h3(), root.id()])
-    hq.heappush(pq, pqNode(root.h3(), root.id()))
+    def configure(self, default=True):
 
-    # world = tree.get_node(root.id()).data
+        if not default:
+            # create the root node
+            self.size = int(input("Please enter the puzzle size (8, 15, 24...): "))
+            self.conf = input("Please enter the configuration of the puzzle,\n"
+                              "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
+                              " You may type 'rand' to have the order generated for you: ")
+            self.type = input("Please select 'a' for A* search or 'b' for best-first search: ")
 
-    def expand(node):
+        # create the root node based on the specifications
+        root = Board(self.size, self.conf)
+        self.tree.create_node(root.id(), root.id(), data=root)
+
+        # push initial node onto the priority queue
+        # hq.heappush(pq, [root.h3(), root.id()])
+        hq.heappush(self.pq, self.PQNode(root.h3(), root.id()))
+
+    def expand(self, node):
         # generate costs for the current node and add to tree and priority queue
         if node.goal():
             print("GOAL FOUND goal found")
-        #    nfd = True
+            self.found = True
 
         for i in range(4):
             c = copy.deepcopy(node)
@@ -209,71 +213,39 @@ def test_run():
             # otherwise add it to tree
             fail = False
             try:
-                tree.create_node(c.id(), c.id(), parent=node.id(), data=c)
-            except:
+                self.tree.create_node(c.id(), c.id(), parent=node.id(), data=c)
+            except IndexError:
                 # it could be a duplicate node. won't get picked of course but ID is in use
                 fail = True
 
             # otherwise add to heap
             if not fail:
-                n = tree.get_node(c.id())
-                d = tree.depth(n)
+                n = self.tree.get_node(c.id())
+                d = self.tree.depth(n)
                 # hq.heappush(pq, [c.h3() + d - 1, c.id()])
-                hq.heappush(pq, pqNode(c.h3() + d, c.id()))
+                hq.heappush(self.pq, self.PQNode(c.h3() + d, c.id()))
 
-            # return nfd # no goal found
-
-    def expand_cheapest():
-        cheapest = hq.heappop(pq)
+    def expand_cheapest(self):
+        cheapest = hq.heappop(self.pq)
         # cheapest = pq[0]
-        node = tree.get_node(cheapest.id).data
-        expand(node)
+        node = self.tree.get_node(cheapest.id).data
+        self.expand(node)
         # print(pq)
 
-    for j in range(100000):
-        expand_cheapest()
-        # print("i: ", i, " cost: ", cost)
+    def run(self, limit=1000):
+        for j in range(limit):
+            self.expand_cheapest()
+            # print("i: ", i, " cost: ", cost)
+            if self.found:
+                break
 
-    # tree.show()
+    def show(self):
+        self.tree.show()
 
-
-    # create nodes for all of the possibilities
-    # left = copy.copy(world)
-    # tree.create_node("left", "left", parent=world.id(), data=left)
-    #
-    # if search == 'a':
-    #     print("A* search not implemented.")
-    #
-    # else:
-    #     print("Best-first search not implemented.")
-    #
-    # world.info()
-    #
-    # world.up()
-    # world.up()
-    # world.up()
-    #
-    # world.info()
-    #
-    # world.left()
-    # world.left()
-    # world.left()
-    #
-    # world.info()
-    #
-    # world.right()
-    # world.right()
-    # world.right()
-    #
-    # world.info()
-    #
-    # world.down()
-    # world.down()
-    # world.down()
-    #
-    # world.info()
-    #
 
 if __name__ == '__main__':
 
-    test_run()
+    run = TestRun()
+    run.configure()
+    run.run()
+
