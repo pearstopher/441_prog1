@@ -1,12 +1,11 @@
+# CS441 Programming Assignment 1
+# Christopher Juncker
+
 import numpy as np
 import math
-from treelib import Node, Tree
 import copy
-import heapq as hq  # this is my priority queue
-
-# todo:
-# fix up Board nodes in tree
-# implement priority queue
+from treelib import Tree, exceptions as x  # search tree
+import heapq as hq  # priority queue
 
 
 class Board:
@@ -214,7 +213,7 @@ class TestRun:
             fail = False
             try:
                 self.tree.create_node(c.id(), c.id(), parent=node.id(), data=c)
-            except IndexError:
+            except x.DuplicatedNodeIdError:
                 # it could be a duplicate node. won't get picked of course but ID is in use
                 fail = True
 
@@ -232,11 +231,12 @@ class TestRun:
         self.expand(node)
         # print(pq)
 
-    def run(self, limit=1000):
-        for j in range(limit):
+    def run(self, limit=5000):
+        for i in range(limit):
             self.expand_cheapest()
             # print("i: ", i, " cost: ", cost)
             if self.found:
+                print("Iterations: ", i)
                 break
 
     def show(self):
@@ -248,4 +248,3 @@ if __name__ == '__main__':
     run = TestRun()
     run.configure()
     run.run()
-
