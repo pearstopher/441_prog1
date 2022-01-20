@@ -20,6 +20,9 @@ class Board:
         if conf == "rand":
             # generate n squares at random locations
             self.tiles = np.random.choice(self.SIZE, self.SIZE, replace=False)
+            while not self.solvable():
+                self.tiles = np.random.choice(self.SIZE, self.SIZE, replace=False)
+
         else:
             # I am using 0 to represent the empty square
             conf = conf.replace("b", "0")
@@ -184,9 +187,9 @@ class TestRun:
         def __lt__(self, other):
             return self.cost < other.cost
 
-    def configure(self, default=True):
+    def configure(self, mode="default", c_size=None, c_conf=None, c_type=None, c_heuristic=None):
 
-        if not default:
+        if mode == "input":
             # create the root node
             self.size = int(input("Please enter the puzzle size (8, 15, 24...): "))
             self.conf = input("Please enter the configuration of the puzzle,\n"
@@ -194,6 +197,14 @@ class TestRun:
                               " You may type 'rand' to have the order generated for you: ")
             self.type = input("Please select 'a' for A* search or 'b' for best-first search: ")
             self.heuristic = input("Please select a heuristic (1, 2, 3): ")
+
+        if mode == "preset":
+            self.size = c_size
+            self.conf = c_conf
+            self.type = c_type
+            self.heuristic = c_heuristic
+
+        # ^otherwise the program just uses the default values from init
 
         # create the root node based on the specifications
         root = Board(self.size, self.conf)
@@ -256,7 +267,7 @@ class TestRun:
         self.expand(node)
         # print(pq)
 
-    def run(self, limit=5000):
+    def run(self, limit=100000):
         for i in range(limit):
             self.expand_cheapest()
             # print("i: ", i, " cost: ", cost)
@@ -284,8 +295,36 @@ class TestRun:
             return result
 
 
+def run_default():
+    run = TestRun()
+    run.configure()
+    run.run()
+
+
+def run_input():
+    run = TestRun()
+    run.configure("input")
+    run.run()
+
+
+def run_assignment():
+    presets = ["7 8 b 6 2 3 5 4 1",
+               "3 6 1 8 7 4 2 5 b",
+               "3 b 8 6 7 1 2 4 5",
+               "3 5 4 1 2 b 7 6 8",
+               "4 2 6 3 b 7 8 1 5"]
+
+    # for each search,
+    for i in ("a", "b"):
+        # for each heuristic,
+        for j in range(3):
+            # for each preset
+            for k in presets:
+                run = TestRun()
+                run.configure("preset", 8, k, i, j + 1)
+                run.run()
+
+
 if __name__ == '__main__':
 
-    run = TestRun()
-    run.configure(False)
-    run.run(100000)
+    run_assignment()
