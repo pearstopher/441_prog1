@@ -2,6 +2,7 @@ import numpy as np
 import math
 from treelib import Node, Tree
 import copy
+import heapq as hq  # this is my priority queue
 
 # todo:
 # fix up Board nodes in tree
@@ -23,6 +24,10 @@ class Board:
             # split the string and build the array
             self.tiles = np.array(list(map(int, conf.split())))
 
+        self.goal_tiles = np.array(list(range(0, self.SIZE)))
+        # print(self.goal)
+        # rint(self.tiles)
+
     # HELPERS
 
     # get location of the empty square
@@ -35,7 +40,6 @@ class Board:
         if a < 0 or a > self.SIZE - 1 \
                 or b < 0 or b > self.SIZE - 1:
             return False
-
         temp = self.tiles[a]
         self.tiles[a] = self.tiles[b]
         self.tiles[b] = temp
@@ -118,21 +122,21 @@ class Board:
                 cost += dist_lr + dist_ud
         return cost
 
-    # DISPLAY
+    # DISPLAY & INFO
 
     # return unique identifier for this board configuration
     def id(self):
-        # return int(np.core.defchararray.join('', self.tiles.tolist()))
-        # generate an array with strings
+        # convert board configuration into a unique integer
         ID = ""
         for i in self.tiles:
             ID += str(i)
-
         return int(ID)
 
-
-
-
+    def goal(self):
+        # check if this board has reached the goal
+        if np.array_equal(self.tiles, self.goal_tiles):
+            return True
+        return False
 
     # print some basic info about the board
     def info(self):
@@ -153,51 +157,121 @@ def test_run():
     #              "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
     #              " You may type 'rand' to have the order generated for you: ")
     # type = input("Please select 'a' for A* search or 'b' for best-first search: ")
+
+    # hardcode some init for now
     size = 8
-    conf = 'rand'
+    conf = "1 b 2 3 4 5 6 7 8"
     search = 'a'
 
+    # create the root node based on the specifications
     root = Board(size, conf)
     tree.create_node(root.id(), root.id(), data=root)
 
-    world = tree.get_node(root.id()).data
+    # initialize priority queue
+    pq = []
+
+    # make a little node to hold our data in the heap
+    class pqNode:
+        def __init__(self, cost, id):
+            self.cost = cost
+            self.id = id
+
+        def __lt__(self, other):
+            return self.cost < other.cost
+
+    # push initial node onto the priority queue
+    # hq.heappush(pq, [root.h3(), root.id()])
+    hq.heappush(pq, pqNode(root.h3(), root.id()))
+
+    # world = tree.get_node(root.id()).data
+
+    def expand(node):
+        # generate costs for the current node and add to tree and priority queue
+        if node.goal():
+            print("GOAL FOUND")
+            return
+
+        for i in range(4):
+            c = copy.deepcopy(node)
+            # wtb switch statement
+            if i == 0:
+                c.left()
+            elif i == 1:
+                c.right()
+            elif i == 2:
+                c.up()
+            elif i == 3:
+                c.down()
+            # ignore if resulting board is identical
+            if c.id() == node.id():
+                continue
+
+            # otherwise add it to tree
+            fail = False
+            try:
+                tree.create_node(c.id(), c.id(), parent=node.id(), data=c)
+            except:
+                # it could be a duplicate node. won't get picked of course but ID is in use
+                fail = True
+
+            # otherwise add to heap
+            if not fail:
+                n = tree.get_node(c.id())
+                d = tree.depth(n)
+                # hq.heappush(pq, [c.h3() + d - 1, c.id()])
+                hq.heappush(pq, pqNode(c.h3() + d, c.id()))
+
+    def expand_cheapest():
+        cheapest = hq.heappop(pq)
+        # cheapest = pq[0]
+        node = tree.get_node(cheapest.id).data
+        expand(node)
+        #print(pq)
+        return cheapest.cost
+
+    for i in range(3):
+        cost = expand_cheapest()
+        print("i: ", i, " cost: ", cost)
+
+    tree.show()
+
 
     # create nodes for all of the possibilities
-    left = copy.copy(world)
-    tree.create_node("left", "left", parent=world.id(), data=left)
-
-    if search == 'a':
-        print("A* search not implemented.")
-
-    else:
-        print("Best-first search not implemented.")
-
-    world.info()
-
-    world.up()
-    world.up()
-    world.up()
-
-    world.info()
-
-    world.left()
-    world.left()
-    world.left()
-
-    world.info()
-
-    world.right()
-    world.right()
-    world.right()
-
-    world.info()
-
-    world.down()
-    world.down()
-    world.down()
-
-    world.info()
-
+    # left = copy.copy(world)
+    # tree.create_node("left", "left", parent=world.id(), data=left)
+    #
+    # if search == 'a':
+    #     print("A* search not implemented.")
+    #
+    # else:
+    #     print("Best-first search not implemented.")
+    #
+    # world.info()
+    #
+    # world.up()
+    # world.up()
+    # world.up()
+    #
+    # world.info()
+    #
+    # world.left()
+    # world.left()
+    # world.left()
+    #
+    # world.info()
+    #
+    # world.right()
+    # world.right()
+    # world.right()
+    #
+    # world.info()
+    #
+    # world.down()
+    # world.down()
+    # world.down()
+    #
+    # world.info()
+    #
 
 if __name__ == '__main__':
 
