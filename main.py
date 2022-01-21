@@ -208,7 +208,7 @@ class TestRun:
 
         # create the root node based on the specifications
         root = Board(self.size, self.conf)
-        root.info()
+        # root.info()  # good information, keep silent for now
         self.tree.create_node(root.id(), root.id(), data=root)
 
         # push initial node onto the priority queue
@@ -319,9 +319,11 @@ def run_assignment():
         # for each heuristic,
         for j in range(3):
             # for each preset
-            for k in presets:
+            for k in range(len(presets)):
                 run = TestRun()
-                run.configure("preset", 8, k, i, j + 1)
+                s = "A*" if i == "a" else "Best-First"
+                print("\n\tSEARCH ", s, ",\tHEURISTIC ", j + 1, ",\tPRESET ", k, ": ", presets[k], "\n")
+                run.configure("preset", 8, presets[k], i, j + 1)
                 run.run()
 
 
