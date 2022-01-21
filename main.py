@@ -276,10 +276,11 @@ class TestRun:
                 path = []
                 path = self.show_path(self.found, path)
                 print("Steps to solution: ", len(path))
-                print()
-                for j in path:
+                for j in range(len(path)):
                     # print(j.reshape(self.found.WIDTH, self.found.WIDTH))
-                    print(j)
+                    print(path[j], end='')
+                    if j != len(path) - 1:
+                        print(" -> ", end='')
                 print()
                 break
 
@@ -317,13 +318,13 @@ def run_assignment():
     # for each search,
     for i in ("a", "b"):
         # for each heuristic,
-        for j in range(3):
+        for j in range(1, 4):
             # for each preset
             for k in range(len(presets)):
                 run = TestRun()
                 s = "A*" if i == "a" else "Best-First"
-                print("\n\tSEARCH ", s, ",\tHEURISTIC ", j + 1, ",\tPRESET ", k, ": ", presets[k], "\n")
-                run.configure("preset", 8, presets[k], i, j + 1)
+                print("\nSEARCH", s, ",\tHEURISTIC", j, ",\tPRESET", k + 1, "(", presets[k], ")")
+                run.configure("preset", 8, presets[k], i, j)
                 run.run()
 
 
