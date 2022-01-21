@@ -99,7 +99,7 @@ class Board:
                 cost += 1
         return cost
 
-    # heuristic 2 - total Euclidian distance (L2 norm)
+    # heuristic 2 - total Euclidean distance (L2 norm)
     # dominates h1
     def h2(self):
         cost = 0
@@ -327,7 +327,28 @@ def run_assignment():
                 run.configure("preset", 8, presets[k], i, j)
                 run.run()
 
+def run_extra_credit():
+    presets = ["7 8 b 6 2 3 5 4 1",
+               "3 6 1 8 7 4 2 5 b",
+               "3 b 8 6 7 1 2 4 5",
+               "3 5 4 1 2 b 7 6 8",
+               "4 2 6 3 b 7 8 1 5"]
+
+    # for each search,
+    for i in ("a", "b"):
+        # for each heuristic,
+        for j in range(1, 4):
+            # for each preset
+            for k in range(len(presets)):
+                run = TestRun()
+                s = "A*" if i == "a" else "Best-First"
+                print("\nSEARCH", s, ",\tHEURISTIC", j, ",\tPRESET", k + 1, "(", presets[k], ")")
+                run.configure("preset", 8, presets[k], i, j)
+                run.run()
+
 
 if __name__ == '__main__':
 
-    run_assignment()
+    run_input()
+    # run_assignment()
+    # run_extra_credit()
