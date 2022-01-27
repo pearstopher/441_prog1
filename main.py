@@ -97,6 +97,7 @@ class Board:
         for i in range(0, self.SIZE):
             if self.tiles[i] != i and self.tiles[i] != 0:
                 cost += 1
+        # print(cost)
         return cost
 
     # heuristic 2 - total Euclidean distance (L2 norm)
@@ -148,6 +149,9 @@ class Board:
 
     def goal(self):
         # check if this board has reached the goal
+        # print(self.tiles)
+        # print(self.goal_tiles)
+        # print()
         if np.array_equal(self.tiles, self.goal_tiles):
             return True
         return False
@@ -168,7 +172,8 @@ class TestRun:
         # initialize the tree
         self.tree = Tree()
         # default info to start
-        self.size = 8
+        self.size = 8  # does this mess up goal configuration?
+        # self.size = 15
         self.conf = "rand"
         self.type = 'a'
         self.heuristic = 1
@@ -305,7 +310,7 @@ def run_default():
 def run_input():
     run = TestRun()
     run.configure("input")
-    run.run()
+    run.run(10000000)
 
 
 def run_assignment():
@@ -327,12 +332,13 @@ def run_assignment():
                 run.configure("preset", 8, presets[k], i, j)
                 run.run()
 
+
 def run_extra_credit():
-    presets = ["7 8 b 6 2 3 5 4 1",
-               "3 6 1 8 7 4 2 5 b",
-               "3 b 8 6 7 1 2 4 5",
-               "3 5 4 1 2 b 7 6 8",
-               "4 2 6 3 b 7 8 1 5"]
+    presets = ["b 1 2 3 5 6 4 7 8 9 10 11 12 13 14 15",
+               "b 1 2 3 12 5 6 7 4 9 10 11 8 13 14 15",
+               "3 2 1 b 6 5 4 7 8 9 10 11 12 13 14 15",
+               "b 1 2 3 5 4 6 7 9 8 10 11 12 13 14 15",
+               "b 1 2 3 6 5 4 7 10 9 8 11 12 13 14 15"]
 
     # for each search,
     for i in ("a", "b"):
@@ -343,12 +349,21 @@ def run_extra_credit():
                 run = TestRun()
                 s = "A*" if i == "a" else "Best-First"
                 print("\nSEARCH", s, ",\tHEURISTIC", j, ",\tPRESET", k + 1, "(", presets[k], ")")
-                run.configure("preset", 8, presets[k], i, j)
-                run.run()
+                run.configure("preset", 15, presets[k], i, j)
+                run.run(10000000)  # 100k default is nothing!
 
 
 if __name__ == '__main__':
 
-    run_input()
-    # run_assignment()
-    # run_extra_credit()
+    print("Please make a selection:")
+    print("\t1) User Input")
+    print("\t2) Assignment")
+    print("\t3) Extra Credit")
+    run = input("... ")
+
+    if run == "2":
+        run_assignment()
+    elif run == "3":
+        run_extra_credit()
+    else:
+        run_input()
