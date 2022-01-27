@@ -7,8 +7,6 @@ import copy
 from treelib import Tree, exceptions as x  # pip install treelib
 import heapq as hq  # priority queue
 
-# todo: implement 'test suite' to run all heuristics for each search method
-
 
 class Board:
 
@@ -29,7 +27,10 @@ class Board:
             # split the string and build the array
             self.tiles = np.array(list(map(int, conf.split())))
 
-        self.goal_tiles = np.array(list(range(0, self.SIZE)))
+        # set the goal configuration
+        self.goal_tiles = np.array(list(range(1, self.SIZE + 1)))
+        # set last square to 0/blank
+        self.goal_tiles[self.SIZE - 1] = 0
         # print(self.goal)
         # print(self.tiles)
 
@@ -95,7 +96,7 @@ class Board:
         cost = 0
         # loop through tiles, check if misplaced
         for i in range(0, self.SIZE):
-            if self.tiles[i] != i and self.tiles[i] != 0:
+            if self.tiles[i] != i + 1 and self.tiles[i] != 0:
                 cost += 1
         # print(cost)
         return cost
@@ -108,9 +109,9 @@ class Board:
         for i in range(0, self.SIZE):
             if self.tiles[i] != 0:
                 # how many rows off left/right
-                dist_lr = (self.tiles[i] % self.WIDTH) - (i % self.WIDTH)
+                dist_lr = ((self.tiles[i] - 1) % self.WIDTH) - (i % self.WIDTH)
                 # how many columns off up/down
-                dist_ud = math.floor(self.tiles[i] / self.WIDTH) - math.floor(i / self.WIDTH)
+                dist_ud = math.floor((self.tiles[i] - 1) / self.WIDTH) - math.floor(i / self.WIDTH)
                 cost += math.sqrt(dist_lr*dist_lr + dist_ud*dist_ud)
         return cost
 
@@ -122,9 +123,9 @@ class Board:
         for i in range(0, self.SIZE):
             if self.tiles[i] != 0:
                 # how many rows off left/right
-                dist_lr = abs((self.tiles[i] % self.WIDTH) - (i % self.WIDTH))
+                dist_lr = abs(((self.tiles[i] - 1) % self.WIDTH) - (i % self.WIDTH))
                 # how many columns off up/down
-                dist_ud = abs(math.floor(self.tiles[i] / self.WIDTH) - math.floor(i / self.WIDTH))
+                dist_ud = abs(math.floor((self.tiles[i] - 1) / self.WIDTH) - math.floor(i / self.WIDTH))
                 cost += dist_lr + dist_ud
         return cost
 
@@ -272,7 +273,7 @@ class TestRun:
         self.expand(node)
         # print(pq)
 
-    def run(self, limit=100000):
+    def run(self, limit=300000):
         for i in range(limit):
             self.expand_cheapest()
             # print("i: ", i, " cost: ", cost)
@@ -359,11 +360,11 @@ if __name__ == '__main__':
     print("\t1) User Input")
     print("\t2) Assignment")
     print("\t3) Extra Credit")
-    run = input("... ")
+    run_mode = input("... ")
 
-    if run == "2":
+    if run_mode == "2":
         run_assignment()
-    elif run == "3":
+    elif run_mode == "3":
         run_extra_credit()
     else:
         run_input()
