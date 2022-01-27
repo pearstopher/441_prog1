@@ -91,6 +91,8 @@ class Board:
 
     # HEURISTICS
 
+    #todo: heuristics should use self.goal_tiles to return cost for any goal state
+
     # heuristic 1 - number of misplaced tiles
     def h1(self):
         cost = 0
@@ -335,11 +337,11 @@ def run_assignment():
 
 
 def run_extra_credit():
-    presets = ["b 1 2 3 5 6 4 7 8 9 10 11 12 13 14 15",
-               "b 1 2 3 12 5 6 7 4 9 10 11 8 13 14 15",
-               "3 2 1 b 6 5 4 7 8 9 10 11 12 13 14 15",
-               "b 1 2 3 5 4 6 7 9 8 10 11 12 13 14 15",
-               "b 1 2 3 6 5 4 7 10 9 8 11 12 13 14 15"]
+    presets = ["1 2 3 4 5 6 7 8 9 12 10 11 13 14 15 b",
+               "1 2 3 12 5 6 7 4 9 10 11 8 13 14 15 b",
+               "1 2 3 4 5 6 7 8 9 10 12 11 b 13 15 14",
+               "1 2 3 4 5 6 7 8 9 10 12 11 13 15 14 b",
+               "1 2 3 4 5 6 7 8 9 10 11 14 12 13 15 b"]
 
     # for each search,
     for i in ("a", "b"):
