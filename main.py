@@ -97,56 +97,42 @@ class Board:
 
     # HEURISTICS
 
-    # todo: heuristics should use self.goal_tiles to return cost for any goal state
-
+    # helper: calculate difference in rows between two indexes
     def row_diff(self, num):
-        a = int(np.where(self.tiles == num)[0])
-        b = int(np.where(self.goal_tiles == num)[0])
+        a = self.find(self.tiles, num)
+        b = self.find(self.goal_tiles, num)
         diff = abs(math.floor(a / self.WIDTH) - math.floor(b / self.WIDTH))
         return diff
 
+    # helper: calculate difference in columns between two indexes
     def col_diff(self, num):
-        a = int(np.where(self.tiles == num)[0])
-        b = int(np.where(self.goal_tiles == num)[0])
+        a = self.find(self.tiles, num)
+        b = self.find(self.goal_tiles, num)
         diff = abs((a % self.WIDTH) - (b % self.WIDTH))
         return diff
 
     # heuristic 1 - number of misplaced tiles
     def h1(self):
         cost = 0
-        # loop through tiles, check if misplaced
-        for i in range(0, self.SIZE):
-            if self.tiles[i] != i + 1 and self.tiles[i] != 0:
+        for i in range(1, self.SIZE):
+            if self.row_diff(i) or self.col_diff(i):
                 cost += 1
-        # print(cost)
         return cost
 
     # heuristic 2 - total Euclidean distance (L2 norm)
     # dominates h1
     def h2(self):
         cost = 0
-        # loop through tiles, calculate distance from correct square
-        for i in range(0, self.SIZE):
-            if self.tiles[i] != 0:
-                # how many rows off left/right
-                dist_lr = ((self.tiles[i] - 1) % self.WIDTH) - (i % self.WIDTH)
-                # how many columns off up/down
-                dist_ud = math.floor((self.tiles[i] - 1) / self.WIDTH) - math.floor(i / self.WIDTH)
-                cost += math.sqrt(dist_lr*dist_lr + dist_ud*dist_ud)
+        for i in range(1, self.SIZE):
+            cost += math.sqrt(pow(self.row_diff(i), 2) + pow(self.col_diff(i), 2))
         return cost
 
     # heuristic 3 - total Manhattan distance (i.e. 1-norm)
     # dominates h2
     def h3(self):
         cost = 0
-        # loop through tiles, calculate distance from correct square
-        for i in range(0, self.SIZE):
-            if self.tiles[i] != 0:
-                # how many rows off left/right
-                dist_lr = abs(((self.tiles[i] - 1) % self.WIDTH) - (i % self.WIDTH))
-                # how many columns off up/down
-                dist_ud = abs(math.floor((self.tiles[i] - 1) / self.WIDTH) - math.floor(i / self.WIDTH))
-                cost += dist_lr + dist_ud
+        for i in range(1, self.SIZE):
+            cost += self.row_diff(i) + self.col_diff(i)
         return cost
 
     # DISPLAY & INFO
