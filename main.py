@@ -36,9 +36,15 @@ class Board:
 
     # HELPERS
 
+    # find index of tile in an array
+    @staticmethod
+    def find(array, tile):
+        return int(np.where(array == tile)[0])
+
     # get location of the empty square
     def empty(self):
-        return int(np.where(self.tiles == 0)[0])
+        # return int(np.where(self.tiles == 0)[0])
+        return self.find(self.tiles, 0)
 
     # swap two tiles
     def swap(self, a, b):
@@ -91,7 +97,19 @@ class Board:
 
     # HEURISTICS
 
-    #todo: heuristics should use self.goal_tiles to return cost for any goal state
+    # todo: heuristics should use self.goal_tiles to return cost for any goal state
+
+    def row_diff(self, num):
+        a = int(np.where(self.tiles == num)[0])
+        b = int(np.where(self.goal_tiles == num)[0])
+        diff = abs(math.floor(a / self.WIDTH) - math.floor(b / self.WIDTH))
+        return diff
+
+    def col_diff(self, num):
+        a = int(np.where(self.tiles == num)[0])
+        b = int(np.where(self.goal_tiles == num)[0])
+        diff = abs((a % self.WIDTH) - (b % self.WIDTH))
+        return diff
 
     # heuristic 1 - number of misplaced tiles
     def h1(self):
