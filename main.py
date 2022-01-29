@@ -101,7 +101,8 @@ class Board:
     def row_diff(self, num):
         a = self.find(self.tiles, num)
         b = self.find(self.goal_tiles, num)
-        diff = abs(math.floor(a / self.WIDTH) - math.floor(b / self.WIDTH))
+        # diff = abs(math.floor(a / self.WIDTH) - math.floor(b / self.WIDTH))
+        diff = abs((a // self.WIDTH) - (b // self.WIDTH))
         return diff
 
     # helper: calculate difference in columns between two indexes
@@ -208,7 +209,7 @@ class TestRun:
                               "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
                               " You may type 'rand' to have the order generated for you: ")
             self.type = input("Please select 'a' for A* search or 'b' for best-first search: ")
-            self.heuristic = input("Please select a heuristic (1, 2, 3): ")
+            self.heuristic = int(input("Please select a heuristic (1, 2, 3): "))
 
         if mode == "preset":
             self.size = c_size
@@ -225,7 +226,7 @@ class TestRun:
 
         # push initial node onto the priority queue
         # hq.heappush(pq, [root.h3(), root.id()])
-        hq.heappush(self.pq, self.PQNode(root.h3(), root.id()))
+        hq.heappush(self.pq, self.PQNode(0, root.id()))
 
     def expand(self, node):
         # generate costs for the current node and add to tree and priority queue
@@ -271,6 +272,7 @@ class TestRun:
                     d = self.tree.depth(n)
                     cost += d
                 hq.heappush(self.pq, self.PQNode(cost, c.id()))
+                print(cost)
 
     def expand_cheapest(self):
         cheapest = hq.heappop(self.pq)
@@ -279,7 +281,7 @@ class TestRun:
         self.expand(node)
         # print(pq)
 
-    def run(self, limit=300000):
+    def run(self, limit=100000):
         for i in range(limit):
             self.expand_cheapest()
             # print("i: ", i, " cost: ", cost)
@@ -317,7 +319,7 @@ def run_default():
 def run_input():
     run = TestRun()
     run.configure("input")
-    run.run(10000000)
+    run.run(100000)
 
 
 def run_assignment():
