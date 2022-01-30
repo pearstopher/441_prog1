@@ -405,7 +405,7 @@ class Run:
 
 """
 Preconfigured Run Modes
-    I have provided three basic options which can be selected when runing the program:
+    I have provided three basic options which can be selected when running the program:
     
     run_input
         Allows the user to input exactly how they would like the program to run.
