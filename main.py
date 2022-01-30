@@ -1,11 +1,82 @@
-# CS441 Programming Assignment 1
+# CS441-003 Programming Assignment 1
 # Christopher Juncker
+#
+# Instructions:
+#   I had to 'pip install treelib' to get my tree going.
+#   Everything else should work without any problems.
+#   Tested on my Windows PC using Python 3.9 and on the
+#     school servers using Python 3.8 without any issues.
 
 import numpy as np
 import math
 import copy
 from treelib import Tree, exceptions as x  # pip install treelib
 import heapq as hq  # priority queue
+
+"""
+Board
+    Class to hold board configurations. Each node in my tree contains one board object.
+    
+Variables:
+    SIZE
+        number of squares on the board. An n-puzzle board has n+1 squares
+    WIDTH
+        is equal to height because the board is square. WIDTH = sqrt(SIZE)
+    tiles
+        a 1-d array of tiles representing the current board configuration.
+    goal_tiles
+        a 1-d array of tiles representing the goal state or solved board.
+    parent
+        If assigned, a reference to the board used to generated this position.
+        
+Functions:
+    init
+        Set up initial board state information.
+        
+    [MOVEMENT]
+    find(array, tile)
+        Find the location of a tile in a given board array.
+    empty
+        Return the location of the empty square
+    swap(tile1, tile2)
+        Swap any two squares in the array. Only checks that indexes are valid.
+    up
+        Swaps the blank with the tile above it.
+    down
+        Swaps the blank with the tile below it.
+    left
+        Swaps the blank with the tile to it's left.
+    right
+        Swaps the blank with the tile on it's right.
+        
+    [HEURISTICS]
+    row_diff(tile1, tile2)
+        Returns how many rows away one tile is from another
+    col_diff(tile1, tile2)
+        Returns how many columns away one tile is from another
+    h1
+        First heuristic. Calculates number of tiles out of place.
+    h2
+        Second heuristic. Calculates straight line distance between tiles and
+        their correct locations (Euclidean distance). Dominates h1.
+    h3
+        Third heuristic. Calculates number of swaps required to get each tile
+        to it's correct location (Manhattan distance). Dominates h2.
+    
+    [BOARD INFO]
+    id
+        Returns an identifier which is unique for this board configuration.
+    solvable
+        Returns true if the board is has an even number of inversions. The
+        rest of this program supports custom goal states so this will need
+        to be modified to determine whether the goal state has an even or
+        odd number of inversions.
+    goal
+        Returns true if the board state matches the goal state.
+    info
+        Prints information about the current board state. Not currently used.
+        
+"""
 
 
 class Board:
@@ -17,36 +88,29 @@ class Board:
 
         if conf == "rand":
             # generate n squares at random locations
-            self.tiles = np.random.choice(self.SIZE, self.SIZE, replace=False)
             while not self.solvable():
                 self.tiles = np.random.choice(self.SIZE, self.SIZE, replace=False)
-
         else:
-            # I am using 0 to represent the empty square
+            # I am using 0 to represent the empty square going forwards
             conf = conf.replace("b", "0")
-            # split the string and build the array
+            # split the configuration string and build the array
             self.tiles = np.array(list(map(int, conf.split())))
 
         # set the goal configuration
         self.goal_tiles = np.array(list(range(1, self.SIZE + 1)))
         # set last square to 0/blank
         self.goal_tiles[self.SIZE - 1] = 0
-        # print(self.goal)
-        # print(self.tiles)
+        # looking back, it was definitely a waste of space to have each board
+        #   hold a goal state when the goal state never changes.
 
-    # HELPERS
-
-    # find index of tile in an array
+    # MOVEMENT FUNCTIONS
     @staticmethod
     def find(array, tile):
         return int(np.where(array == tile)[0])
 
-    # get location of the empty square
     def empty(self):
-        # return int(np.where(self.tiles == 0)[0])
         return self.find(self.tiles, 0)
 
-    # swap two tiles
     def swap(self, a, b):
         # check for invalid indexes
         if a < 0 or a > self.SIZE - 1 \
@@ -57,9 +121,6 @@ class Board:
         self.tiles[b] = temp
         return True
 
-    # MOVES
-
-    # move the blank up
     def up(self):
         e = self.empty()
         # make sure there is a row above
@@ -68,7 +129,6 @@ class Board:
         self.swap(e, e - self.WIDTH)
         return True
 
-    # move the blank down
     def down(self):
         e = self.empty()
         # make sure there is a row below
@@ -77,7 +137,6 @@ class Board:
         self.swap(e, e + self.WIDTH)
         return True
 
-    # move the blank left
     def left(self):
         e = self.empty()
         # make sure there is a column to the left
@@ -86,7 +145,6 @@ class Board:
         self.swap(e, e - 1)
         return True
 
-    # move the blank right
     def right(self):
         e = self.empty()
         # make sure there is a column to the right
@@ -95,24 +153,22 @@ class Board:
         self.swap(e, e + 1)
         return True
 
-    # HEURISTICS
+    # HEURISTIC FUNCTIONS
 
-    # helper: calculate difference in rows between two indexes
     def row_diff(self, num):
         a = self.find(self.tiles, num)
         b = self.find(self.goal_tiles, num)
         # diff = abs(math.floor(a / self.WIDTH) - math.floor(b / self.WIDTH))
-        diff = abs((a // self.WIDTH) - (b // self.WIDTH))
+        diff = abs((a // self.WIDTH) - (b // self.WIDTH))  # just learned about the //
         return diff
 
-    # helper: calculate difference in columns between two indexes
     def col_diff(self, num):
         a = self.find(self.tiles, num)
         b = self.find(self.goal_tiles, num)
         diff = abs((a % self.WIDTH) - (b % self.WIDTH))
         return diff
 
-    # heuristic 1 - number of misplaced tiles
+    # heuristic 1 - number of misplaced tiles.
     def h1(self):
         cost = 0
         for i in range(1, self.SIZE):
@@ -120,51 +176,47 @@ class Board:
                 cost += 1
         return cost
 
-    # heuristic 2 - total Euclidean distance (L2 norm)
-    # dominates h1
+    # heuristic 2 - total Euclidean distance (L2 norm). Dominates h1.
     def h2(self):
         cost = 0
         for i in range(1, self.SIZE):
             cost += math.sqrt(pow(self.row_diff(i), 2) + pow(self.col_diff(i), 2))
         return cost
 
-    # heuristic 3 - total Manhattan distance (i.e. 1-norm)
-    # dominates h2
+    # heuristic 3 - total Manhattan distance (L1 norm). Dominates h2.
     def h3(self):
         cost = 0
         for i in range(1, self.SIZE):
             cost += self.row_diff(i) + self.col_diff(i)
         return cost
 
-    # DISPLAY & INFO
+    # INFO FUNCTIONS
 
-    # return unique identifier for this board configuration
     def id(self):
-        # convert board configuration into a unique integer
+        # convert board configuration into a unique string
         id_str = ""
         for i in self.tiles:
-            id_str += str(i)
-        return int(id_str)
+            id_str += str(i).zfill(2)  # supports unique ids up to 10x10 board
+        return id_str
 
     def solvable(self):
-        # test if board is solvable by looking for out-of-order elements
+        if not self.tiles:
+            return False
+        # count the number of inversions
         total = 0
         for i in range(0, self.SIZE - 1):
             for j in range(i + 1, self.SIZE):
                 if self.tiles[i] != 0 and self.tiles[j] != 0 and self.tiles[i] > self.tiles[j]:
                     total += 1
+        # as mentioned earlier, in order to fully support custom goal states,
+        #   I will need to also count the number of inversions in the goal.
         return total % 2 == 0
 
     def goal(self):
-        # check if this board has reached the goal
-        # print(self.tiles)
-        # print(self.goal_tiles)
-        # print()
         if np.array_equal(self.tiles, self.goal_tiles):
             return True
         return False
 
-    # print some basic info about the board
     def info(self):
         print("Board ID: ", self.id())
         print("Size: ", self.SIZE, " Width: ", self.WIDTH, " Empty tile: ", self.empty())
@@ -230,8 +282,11 @@ class TestRun:
 
     def expand(self, node):
         # generate costs for the current node and add to tree and priority queue
-        if node.goal():
-            self.found = node
+        # if node.goal():
+        #    # this may be a premature celebration
+        #    # I am concerned that I have happened to find a solution
+        #    # which is not the best solution
+        #    # self.found = node
 
         for i in range(4):
             c = copy.deepcopy(node)
@@ -259,26 +314,38 @@ class TestRun:
 
             # otherwise add to heap
             if not fail:
+                cost = 0
                 # get the cost from specified heuristic
                 if self.heuristic == 1:
                     cost = c.h1()
                 elif self.heuristic == 2:
                     cost = c.h2()
-                else:
+                elif self.heuristic == 3:
                     cost = c.h3()
+                # print(cost, end=", ")
+
+                # if cost == 0:
+                #    self.found = c
+
                 # add depth to cost if the search is A*
                 if self.type == 'a':
                     n = self.tree.get_node(c.id())
                     d = self.tree.depth(n)
                     cost += d
+                    # print(cost)
                 hq.heappush(self.pq, self.PQNode(cost, c.id()))
-                print(cost)
 
     def expand_cheapest(self):
         cheapest = hq.heappop(self.pq)
         # cheapest = pq[0]
         node = self.tree.get_node(cheapest.id).data
-        self.expand(node)
+
+        # check for a goal in cheapest node
+        # instead of checking for goal in all expanded nodes (False goals)
+        if node.goal():
+            self.found = node
+        else:
+            self.expand(node)
         # print(pq)
 
     def run(self, limit=100000):
