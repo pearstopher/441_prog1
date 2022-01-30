@@ -226,24 +226,69 @@ class Board:
         print()
 
 
-class TestRun:
+"""
+Run
+    Class to run the search. Initializes tree, priority queue, and starting board.
+    Expands nodes in a loop until goal state is found or until a limit is reached.
+    
+Variables:
+    tree
+        Tree to hold expanded nodes.
+    pq
+        Priority Queue of frontier nodes ordered by estimated cost.
+    found
+        Holds a reference to the final board in the solution if a solution is found.
+    [CONFIG]
+    size
+        Size of the puzzle to run (8, 15, etc)
+    conf
+        Puzzle configuration. Either a string of tiles ("1 2 3 4 5 6 7 8 b") or the word
+        "rand".    
+    type
+        Type of search. "a" for A* or "b" for Best-First.
+    heuristic
+        Which heuristic to use. 1, 2, or 3 to represent H1, H2, and H3 respectively.
+        
+Functions:
+    init
+        Initializes trees and queue. Must still call configure() before running.
+    configure(mode, configuration)
+        mode can be "input" or "preset". Input mode requests user input to fill configuration
+        data. Preset mode uses configuration data passed in as arguments.
+        
+    [NODE EXPANSION]
+    expand
+        Expand the given node. Creates up to four new nodes (up, down, right, left) and adds each
+        to the tree and to the priority queue.
+    expand_cheapest
+        Removes the cheapest node from the priority queue and expands that node.
+    run(limit)
+        Loops until reaching the limit, expanding the cheapest node. Stops and prints solution if
+        a solution is found.
+        
+    [INFO]
+    show_tree
+        Print the whole tree. Not currently used, but was nice to have for testing.
+    show_path
+        Recursive. Returns solution path as an array of board states ordered from start to end.
+    
+"""
+
+
+class Run:
 
     def __init__(self):
-        # initialize the tree
         self.tree = Tree()
-        # default info to start
-        self.size = 8  # does this mess up goal configuration?
-        # self.size = 15
+        self.pq = []
+        self.found = None
+
+        # have to initialize these to something
+        self.size = 8
         self.conf = "rand"
         self.type = 'a'
-        self.heuristic = 1
+        self.heuristic = 3
 
-        # set up a flag for if answer is found
-        self.found = None
-        # initialize priority queue
-        self.pq = []
-
-    # make a little node to hold our data in the priority q
+    # tiny node to hold my data in the priority queue
     class PQNode:
         def __init__(self, cost, node_id):
             self.cost = cost
@@ -253,9 +298,7 @@ class TestRun:
             return self.cost < other.cost
 
     def configure(self, mode="default", c_size=None, c_conf=None, c_type=None, c_heuristic=None):
-
         if mode == "input":
-            # create the root node
             self.size = int(input("Please enter the puzzle size (8, 15, 24...): "))
             self.conf = input("Please enter the configuration of the puzzle,\n"
                               "  using the format '1 2 3 4 5 6 7 8 b' where b=blank.\n"
@@ -269,25 +312,15 @@ class TestRun:
             self.type = c_type
             self.heuristic = c_heuristic
 
-        # ^otherwise the program just uses the default values from init
-
         # create the root node based on the specifications
         root = Board(self.size, self.conf)
-        # root.info()  # good information, keep silent for now
+        # root.info()  # good info for testing, uncomment if needed
         self.tree.create_node(root.id(), root.id(), data=root)
 
         # push initial node onto the priority queue
-        # hq.heappush(pq, [root.h3(), root.id()])
         hq.heappush(self.pq, self.PQNode(0, root.id()))
 
     def expand(self, node):
-        # generate costs for the current node and add to tree and priority queue
-        # if node.goal():
-        #    # this may be a premature celebration
-        #    # I am concerned that I have happened to find a solution
-        #    # which is not the best solution
-        #    # self.found = node
-
         for i in range(4):
             c = copy.deepcopy(node)
             c.parent = node
@@ -300,10 +333,10 @@ class TestRun:
                 c.up()
             elif i == 3:
                 c.down()
+
             # ignore if resulting board is identical
             if c.id() == node.id():
                 continue
-
             # otherwise add it to tree
             fail = False
             try:
@@ -312,7 +345,7 @@ class TestRun:
                 # it could be a duplicate node. won't get picked of course but ID is in use
                 fail = True
 
-            # otherwise add to heap
+            # if adding to tree was successful, also add to the heap
             if not fail:
                 cost = 0
                 # get the cost from specified heuristic
@@ -322,43 +355,37 @@ class TestRun:
                     cost = c.h2()
                 elif self.heuristic == 3:
                     cost = c.h3()
-                # print(cost, end=", ")
-
-                # if cost == 0:
-                #    self.found = c
 
                 # add depth to cost if the search is A*
                 if self.type == 'a':
                     n = self.tree.get_node(c.id())
                     d = self.tree.depth(n)
                     cost += d
-                    # print(cost)
                 hq.heappush(self.pq, self.PQNode(cost, c.id()))
 
     def expand_cheapest(self):
         cheapest = hq.heappop(self.pq)
-        # cheapest = pq[0]
         node = self.tree.get_node(cheapest.id).data
 
-        # check for a goal in cheapest node
-        # instead of checking for goal in all expanded nodes (False goals)
+        # check if the cheapest node has reached the goal state
+        # (I could check as soon as the nodes are expanded, but I considered that it
+        #   may be possible to expand an inferior goal without ever selecting it)
         if node.goal():
             self.found = node
         else:
             self.expand(node)
-        # print(pq)
 
     def run(self, limit=100000):
         for i in range(limit):
             self.expand_cheapest()
-            # print("i: ", i, " cost: ", cost)
+
+            # print out node information if solution is found
             if self.found:
                 print("Nodes expanded: ", i)
                 path = []
                 path = self.show_path(self.found, path)
                 print("Steps to solution: ", len(path))
                 for j in range(len(path)):
-                    # print(j.reshape(self.found.WIDTH, self.found.WIDTH))
                     print(path[j], end='')
                     if j != len(path) - 1:
                         print(" -> ", end='')
@@ -369,7 +396,6 @@ class TestRun:
         self.tree.show()
 
     def show_path(self, node, result):
-        # result = str(node.id()).zfill(node.SIZE) + "\n" + result
         result.insert(0, node.tiles)
         if node.parent:
             return self.show_path(node.parent, result)
@@ -377,14 +403,26 @@ class TestRun:
             return result
 
 
-def run_default():
-    run = TestRun()
-    run.configure()
-    run.run()
+"""
+Preconfigured Run Modes
+    I have provided three basic options which can be selected when runing the program:
+    
+    run_input
+        Allows the user to input exactly how they would like the program to run.
+        
+    run_assignment
+        Runs the series of 8-puzzle tests which are required by the assignment and
+        which are documented in my assignment write-up.
+        
+    run_extra_credit
+        Runs the series of 15-puzzle tests which are offered as extra credit and
+        which are also documented in my write-up.
+
+"""
 
 
 def run_input():
-    run = TestRun()
+    run = Run()
     run.configure("input")
     run.run(100000)
 
@@ -402,7 +440,7 @@ def run_assignment():
         for j in range(1, 4):
             # for each preset
             for k in range(len(presets)):
-                run = TestRun()
+                run = Run()
                 s = "A*" if i == "a" else "Best-First"
                 print("\nSEARCH", s, ",\tHEURISTIC", j, ",\tPRESET", k + 1, "(", presets[k], ")")
                 run.configure("preset", 8, presets[k], i, j)
@@ -422,7 +460,7 @@ def run_extra_credit():
         for j in range(1, 4):
             # for each preset
             for k in range(len(presets)):
-                run = TestRun()
+                run = Run()
                 s = "A*" if i == "a" else "Best-First"
                 print("\nSEARCH", s, ",\tHEURISTIC", j, ",\tPRESET", k + 1, "(", presets[k], ")")
                 run.configure("preset", 15, presets[k], i, j)
