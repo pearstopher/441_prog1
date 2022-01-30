@@ -13,6 +13,7 @@ import copy
 from treelib import Tree, exceptions as x  # pip install treelib
 import heapq as hq  # priority queue
 
+
 """
 Board
     Class to hold board configurations. Each node in my tree contains one board object.
@@ -85,6 +86,7 @@ class Board:
         self.SIZE = size + 1  # size = total number of spaces on the board
         self.WIDTH = int(math.sqrt(self.SIZE))
         self.parent = None
+        self.tiles = ()
 
         if conf == "rand":
             # generate n squares at random locations
@@ -200,7 +202,7 @@ class Board:
         return id_str
 
     def solvable(self):
-        if not self.tiles:
+        if len(self.tiles) == 0:
             return False
         # count the number of inversions
         total = 0
@@ -417,7 +419,7 @@ Preconfigured Run Modes
     run_extra_credit
         Runs the series of 15-puzzle tests which are offered as extra credit and
         which are also documented in my write-up.
-
+        
 """
 
 
@@ -464,7 +466,7 @@ def run_extra_credit():
                 s = "A*" if i == "a" else "Best-First"
                 print("\nSEARCH", s, ",\tHEURISTIC", j, ",\tPRESET", k + 1, "(", presets[k], ")")
                 run.configure("preset", 15, presets[k], i, j)
-                run.run(10000000)  # 100k default is nothing!
+                run.run()
 
 
 if __name__ == '__main__':
